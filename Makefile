@@ -303,13 +303,7 @@ endif
 	@echo "  AS        "$<
 	@$(AS) $(ASFLAGS)  -c -o $@  $<
 
-
-$(AT91BOOTSTRAP).fixboot: $(AT91BOOTSTRAP)
-	./scripts/fixboot.py $(AT91BOOTSTRAP)
-
-boot: $(AT91BOOTSTRAP).fixboot
-
-PHONY+= boot bootstrap
+PHONY+= bootstrap
 
 rebuild: clean all
 

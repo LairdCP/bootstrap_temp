@@ -444,7 +444,7 @@ static int nandflash_detect_non_onfi(struct nand_chip *chip)
 	return 0;
 }
 
-static void nand_info_init(struct nand_info *nand, struct nand_chip *chip)
+static int nand_info_init(struct nand_info *nand, struct nand_chip *chip)
 {
 	/* number of blocks in device */
 	nand->numblocks = chip->numblocks;
@@ -461,7 +461,8 @@ static void nand_info_init(struct nand_info *nand, struct nand_chip *chip)
 	/* Total number of bytes in a sector */
 	nand->sectorsize = nand->pagesize + nand->oobsize;
 #ifdef CONFIG_USE_PMECC
-	choose_pmecc_info(nand, chip);
+	if (choose_pmecc_info(nand, chip))
+		return -1;
 #endif
 	/* the layout of the spare area */
 	config_nand_ooblayout(&nand_oob_layout, nand, chip);
@@ -476,6 +477,8 @@ static void nand_info_init(struct nand_info *nand, struct nand_chip *chip)
 		nand->command = nand_command;
 		nand->address = nand_address;
 	}
+
+	return 0;
 }
 
 static void nandflash_reset(void)
@@ -518,9 +521,7 @@ static int nandflash_get_type(struct nand_info *nand)
 		return -1;
 #endif
 
-	nand_info_init(nand, chip);
-	
-	return 0;
+	return nand_info_init(nand, chip);
 }
 
 static void write_column_address(struct nand_info *nand,

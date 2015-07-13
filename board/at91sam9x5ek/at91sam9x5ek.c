@@ -46,7 +46,20 @@
 #include "board_hw_info.h"
 
 #ifdef CONFIG_USER_HW_INIT
-extern void hw_init_hook(void);
+static void hw_init_hook(void)
+{
+	/* Setup WB45NBT custom GPIOs */
+	const struct pio_desc gpios[] = {
+	/*  {"NAME",        PIN NUMBER,     VALUE, ATTRIBUTES, TYPE },*/
+		{"CHIP_PWD_L",	AT91C_PIN_PA(28),	0, PIO_DEFAULT, PIO_OUTPUT},
+		{"VBUS_SENSE",	AT91C_PIN_PB(11),	0, PIO_DEFAULT, PIO_INPUT},
+		{"VBUS_EN",	    AT91C_PIN_PB(12),	0, PIO_DEFAULT, PIO_OUTPUT},
+		{"IRQ",	        AT91C_PIN_PB(18),	0, PIO_PULLUP,  PIO_INPUT},
+		{(char *)0,	0, 0, PIO_DEFAULT, PIO_PERIPH_A},
+	};
+
+	pio_configure(gpios);
+}
 #endif
 
 static void at91_dbgu_hw_init(void)

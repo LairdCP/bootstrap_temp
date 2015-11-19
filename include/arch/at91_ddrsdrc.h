@@ -38,10 +38,9 @@
 #define HDDRSDRC2_T3PR		0x18	/* Timing Parameter 3 Register */
 #define HDDRSDRC2_LPR		0x1C	/* Low-power Register */
 #define HDDRSDRC2_MDR		0x20	/* Memory Device Register */
-#define HDDRSDRC2_DLL		0x24	/* DLL Information Register */
-#define HDDRSDRC2_HS		0x2C	/* High Speed Register */
 
 /* below items defined for sama5d3x */
+#define MPDDRC_HS		0x24	/* High Speed Register */
 #define	MPDDRC_LPDDR2_LPR	0x28	/* MPDDRC LPDDR2 Low-power Register */
 #define	MPDDRC_LPDDR2_CAL_MR4	0x2C	/* MPDDRC LPDDR2 Calibration and MR4 Register */
 #define	MPDDRC_LPDDR2_TIM_CAL	0x30	/* MPDDRC LPDDR2 Timing Calibration Register */
@@ -177,8 +176,15 @@
 #define 	AT91C_DDRC2_LPCB_POWERDOWN	(0x2UL)
 #define 	AT91C_DDRC2_LPCB_DEEP_PWD	(0x3UL)
 #define AT91C_DDRC2_CLK_FR	(0x1UL << 2)
+#define 	AT91C_DDRC2_CLK_FR_DISABLED	(0x0UL << 2)
+#define 	AT91C_DDRC2_CLK_FR_ENABLED	(0x1UL << 2)
+#define AT91C_DDRC2_LPDDR2_PWOFF (0x1UL << 3) /**< \brief (MPDDRC_LPR) LPDDR2 Power Off Bit */
+#define   AT91C_DDRC2_LPDDR2_PWOFF_DISABLED (0x0UL << 3) /**< \brief (MPDDRC_LPR) No power off sequence applied to LPDDR2. */
+#define   AT91C_DDRC2_LPDDR2_PWOFF_ENABLED (0x1UL << 3) /**< \brief (MPDDRC_LPR) A power off sequence is applied to the LPDDR2 device. CKE is forced low. */
 #define AT91C_DDRC2_PASR	(0x7UL << 4)
+#define		AT91C_DDRC2_PASR_(x)		((x & 0x07) << 4)
 #define AT91C_DDRC2_DS		(0x7UL << 8)
+#define		AT91C_DDRC2_DS_(x)		((x & 0x07) << 8)
 #define AT91C_DDRC2_TIMEOUT	(0x3UL << 12)
 #define 	AT91C_DDRC2_TIMEOUT_0		(0x0UL << 12)
 #define 	AT91C_DDRC2_TIMEOUT_64		(0x1UL << 12)
@@ -188,6 +194,7 @@
 #define 	AT91C_DDRC2_ADPE_FAST		(0x0UL << 16)
 #define 	AT91C_DDRC2_ADPE_SLOW		(0x1UL << 16)
 #define AT91C_DDRC2_UPD_MR	(0x3UL << 20)
+#define		AT91C_DDRC2_UPD_MR_(x)		((x & 0x03) << 20)
 
 /* -------- HDDRSDRC2_MDR : (HDDRSDRC2 Offset: 0x20) Memory Device Register -------- */
 #define AT91C_DDRC2_MD		(0x7UL << 0)
@@ -201,11 +208,9 @@
 #define 	AT91C_DDRC2_DBW_32_BITS		(0x0UL << 4)
 #define 	AT91C_DDRC2_DBW_16_BITS		(0x1UL << 4)
 
-/* -------- HDDRSDRC2_DLL : (HDDRSDRC2 Offset: 0x24) DLL Information Register --------*/ 
-#define AT91C_DDRC2_MDINC	(0x1UL << 0)
-#define AT91C_DDRC2_MDDEC	(0x1UL << 1)
-#define AT91C_DDRC2_MDOVF	(0x1UL << 2)
-#define AT91C_DDRC2_MDVAL	(0xFFUL << 8
+/* -------- MPDDRC_HS : (MPDDRC_HS Offset: 0x24) High Speed Register --------*/
+#define AT91C_DDRC2_DIS_ANTICIP_READ	(0x1UL << 2)
+#define AT91C_DDRC2_EN_CALIB	(0x1UL << 5)
 
 /* ------- MPDDRC_LPDDR2_LPR (offset: 0x28) */
 #define AT91C_LPDDRC2_BK_MASK_PASR(value)	(value << 0)

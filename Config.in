@@ -275,6 +275,13 @@ config CONFIG_IMAGE_NAME
 	default "zImage" if CONFIG_LINUX_ZIMAGE
 	default "u-boot.bin" if CONFIG_LOAD_UBOOT
 	default "softpack.bin" if CONFIG_LOAD_64KB || CONFIG_LOAD_4MB || CONFIG_LOAD_1MB
+
+config CONFIG_MEMTEST
+	bool "Do memtest"
+	default n
+	help
+	  This makes bootstrap do a memory test instead of loading the
+	  main executable that it would normally load.
 	  
 config CONFIG_DEBUG
 	bool "Debug Support"

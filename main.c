@@ -42,6 +42,8 @@
 #include "act8865.h"
 #include "secure.h"
 
+#include "memtest.h"
+
 extern int load_kernel(struct image_info *img_info);
 
 typedef int (*load_function)(struct image_info *img_info);
@@ -88,6 +90,8 @@ int main(void)
 	struct image_info image;
 	char *media_str = NULL;
 	int ret;
+	void * retptr;
+	int i;
 
 	char filename[FILENAME_BUF_LEN];
 	char of_filename[FILENAME_BUF_LEN];
@@ -167,6 +171,38 @@ int main(void)
 
 #if defined(CONFIG_SECURE)
 	image.dest -= sizeof(at91_secure_header_t);
+#endif
+
+#if defined(CONFIG_MEMTEST)
+	dbg_info("Doing memtest on load area %d, size: %d\n", CONFIG_MEMTEST_START, CONFIG_MEMTEST_SIZE);
+
+	for(i = 0; i < CONFIG_MEMTEST_ITTERATIONS; i++)
+	{
+		dbg_info("Memtest iteration %d\n", i);
+		dbg_info("Testing databus...\n");
+		ret = memTestDataBus( (void *)CONFIG_MEMTEST_START );
+		if( ret != 0 )
+		{
+			dbg_info( "    FAILED. Pattern == %d\n", ret );
+		}
+
+		dbg_info("Testing address bus...\n");
+		retptr = memTestAddressBus((void *)CONFIG_MEMTEST_START, CONFIG_MEMTEST_SIZE);
+		if( retptr != NULL )
+		{
+			dbg_info( "    FAILED. At address == %d\n", retptr );
+			buf_dump((unsigned char *)retptr, 0, 128);
+		}
+
+		dbg_info("Testing device...\n");
+		retptr = memTestDevice((void *)CONFIG_MEMTEST_START, CONFIG_MEMTEST_SIZE);
+		if( retptr != NULL )
+		{
+			dbg_info( "    FAILED. At address == %d\n", retptr );
+			buf_dump((unsigned char *)retptr, 0, 128);
+		}
+	}
+	dbg_info("Finished memtest, loading u-boot\n");
 #endif
 
 	ret = (*load_image)(&image);

@@ -90,8 +90,6 @@ int main(void)
 	struct image_info image;
 	char *media_str = NULL;
 	int ret;
-	void * retptr;
-	int i;
 
 	char filename[FILENAME_BUF_LEN];
 	char of_filename[FILENAME_BUF_LEN];
@@ -174,6 +172,9 @@ int main(void)
 #endif
 
 #if defined(CONFIG_MEMTEST)
+	void * retptr;
+	int i;
+
 	dbg_info("Doing memtest on load area %d, size: %d\n", CONFIG_MEMTEST_START, CONFIG_MEMTEST_SIZE);
 
 	for(i = 0; i < CONFIG_MEMTEST_ITTERATIONS; i++)

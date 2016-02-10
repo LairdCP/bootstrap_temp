@@ -217,6 +217,9 @@ int pio_set_gpio_output(unsigned pin, int value)
 
 	write_pio(pio, PIO_IDR, mask);
 	write_pio(pio, PIO_PPUDR, mask);
+#ifdef CONFIG_HAS_PIO3
+	write_pio(pio, PIO_PPDDR, mask);
+#endif
 	write_pio(pio, (value ? PIO_SODR : PIO_CODR), mask);
 	write_pio(pio, PIO_OER, mask);
 	write_pio(pio, PIO_PER, mask);

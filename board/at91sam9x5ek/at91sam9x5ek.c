@@ -53,7 +53,7 @@ static void at91_dbgu_hw_init(void)
 {
 	/* Configure DBGU pins */
 	const struct pio_desc dbgu_pins[] = {
-		{"RXD", AT91C_PIN_PA(9), 0, PIO_DEFAULT, PIO_PERIPH_A},
+		{"RXD", AT91C_PIN_PA(9), 0, PIO_PULLUP, PIO_PERIPH_A},
 		{"TXD", AT91C_PIN_PA(10), 0, PIO_DEFAULT, PIO_PERIPH_A},
 		{(char *)0, 0, 0, PIO_DEFAULT, PIO_PERIPH_A},
 	};

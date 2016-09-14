@@ -952,6 +952,8 @@ static int nand_loadimage(struct nand_info *nand,
 	unsigned int end_page;
 	unsigned int numpages = 0;
 	unsigned int offsetpage = 0;
+	unsigned int block_remaining = nand->blocksize
+				       - mod(offset, nand->blocksize);
 	int ret;
 
 	division(offset, nand->blocksize, &block, &start_page);
@@ -959,10 +961,10 @@ static int nand_loadimage(struct nand_info *nand,
 
 	while (length > 0) {
 		/* read a buffer corresponding to a block */
-		if (length < nand->blocksize)
+		if (length < block_remaining)
 			readsize = length;
 		else
-			readsize = nand->blocksize;
+			readsize = block_remaining;
 
 		/* adjust the number of pages to read */
 		division(readsize, nand->pagesize, &numpages, &offsetpage);
@@ -995,6 +997,7 @@ static int nand_loadimage(struct nand_info *nand,
 
 		block++;
 		start_page = 0;
+		block_remaining = nand->blocksize;
 	}
 
 	return 0;

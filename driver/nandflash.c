@@ -393,6 +393,19 @@ static int get_ext_onfi_param(unsigned char *eccbits,
 	return 0;
 }
 
+static void nandflash_read_id(unsigned char *manf_id, unsigned char *dev_id)
+{
+	nand_cs_enable();
+
+	nand_command(CMD_READID);
+	nand_address(0x00);
+
+	*manf_id = read_byte();
+	*dev_id = read_byte();
+
+	nand_cs_disable();
+}
+
 static int nandflash_detect_onfi(struct nand_chip *chip)
 {
 	unsigned char onfi_ind[4];
@@ -483,9 +496,9 @@ static int nandflash_detect_onfi(struct nand_chip *chip)
 
 	nand_cs_disable();
 
-	manf_id = *(unsigned char *)(p + PARAMS_OFFSET_JEDEC_ID);
-	dev_id = *(unsigned char *)(p + PARAMS_OFFSET_MODEL);
-	dbg_info("NAND: Manufacturer ID: %d Chip ID: %d\n", manf_id, dev_id);
+	nandflash_read_id(&manf_id, &dev_id);
+
+	dbg_info("NAND: Manufacturer ID: %x Chip ID: %x\n", manf_id, dev_id);
 	dbg_info("NAND: Page Bytes: %d, Spare Bytes: %d\n" \
 		 "NAND: ECC Correctability Bits: %d, ECC Sector Bytes: %d\n",
 		 chip->pagesize, chip->oobsize,
@@ -497,22 +510,13 @@ static int nandflash_detect_onfi(struct nand_chip *chip)
 
 static int nandflash_detect_non_onfi(struct nand_chip *chip)
 {
-	int manf_id, dev_id;
+	unsigned char manf_id, dev_id;
 	unsigned int chipid;
 	unsigned int i;
 
-	nand_cs_enable();
+	nandflash_read_id(&manf_id, &dev_id);
 
-	/* Reading device ID */
-	nand_command(CMD_READID);
-	nand_address(0x00);
-
-	manf_id  = read_byte();
-	dev_id   = read_byte();
-
-	nand_cs_disable();
-
-	chipid = (manf_id << 8) | dev_id;
+	chipid = ((unsigned int)manf_id << 8) | dev_id;
 
 	for (i = 0; i < ARRAY_SIZE(nand_ids); i++) {
 		if (chipid == nand_ids[i].chip_id)
@@ -520,13 +524,13 @@ static int nandflash_detect_non_onfi(struct nand_chip *chip)
 	}
 
 	if (i == ARRAY_SIZE(nand_ids)) {
-		dbg_info("NAND: Not found Manufacturer ID: %d," \
-			"Chip ID: 0x%d\n", manf_id, dev_id);
+		dbg_info("NAND: Not found Manufacturer ID: %x," \
+			"Chip ID: %x\n", manf_id, dev_id);
 
 		return -1;
 	}
 
-	dbg_info("NAND: Manufacturer ID: %d Chip ID: %d\n",
+	dbg_info("NAND: Manufacturer ID: %x Chip ID: %x\n",
 						manf_id, dev_id);
 
 	chip->pagesize	= nand_ids[i].pagesize;
@@ -981,7 +985,7 @@ static int nand_loadimage(struct nand_info *nand,
 					block, buffer) != 0) {
 				block++; /* skip this block */
 				dbg_info("NAND: Bad block:" \
-					" #%d\n", block);
+					" #%x\n", block);
 			} else
 				break;
 		}
@@ -1006,7 +1010,6 @@ static int nand_loadimage(struct nand_info *nand,
 }
 
 #if defined(CONFIG_LOAD_LINUX) || defined(CONFIG_LOAD_ANDROID)
-
 static int update_image_length(struct nand_info *nand,
 				unsigned int offset,
 				unsigned char *dest,
@@ -1022,11 +1025,13 @@ static int update_image_length(struct nand_info *nand,
 	if (flag == KERNEL_IMAGE)
 		return kernel_size(dest);
 #ifdef CONFIG_OF_LIBFDT
-	else
-		return of_get_dt_total_size((void *)dest);
-#else
-	return -1;
+	else {
+		ret = check_dt_blob_valid((void *)dest);
+		if (!ret)
+			return of_get_dt_total_size((void *)dest);
+	}
 #endif
+	return -1;
 }
 #endif
 
@@ -1063,31 +1068,29 @@ int load_nandflash(struct image_info *image)
 	image->length = length;
 #endif
 
-	dbg_info("NAND: Image: Copy %d bytes from %d to %d\n",
+	dbg_info("NAND: Image: Copy %x bytes from %x to %x\n",
 			image->length, image->offset, image->dest);
 
 	ret = nand_loadimage(&nand, image->offset, image->length, image->dest);
 	if (ret)
 		return ret;
 
-	if (image->of) {
-#if defined(CONFIG_LOAD_LINUX) || defined(CONFIG_LOAD_ANDROID)
-		length = update_image_length(&nand,
-				image->of_offset, image->of_dest, DT_BLOB);
-		if (length == -1)
-			return -1;
+#ifdef CONFIG_OF_LIBFDT
+	length = update_image_length(&nand,
+			image->of_offset, image->of_dest, DT_BLOB);
+	if (length == -1)
+		return -1;
 
-		image->of_length = length;
+	image->of_length = length;
+
+	dbg_info("NAND: dt blob: Copy %x bytes from %x to %x\n",
+		image->of_length, image->of_offset, image->of_dest);
+
+	ret = nand_loadimage(&nand, image->of_offset,
+				image->of_length, image->of_dest);
+	if (ret)
+		return ret;
 #endif
-
-		dbg_info("NAND: dt blob: Copy %d bytes from %d to %d\n",
-			image->of_length, image->of_offset, image->of_dest);
-
-		ret = nand_loadimage(&nand, image->of_offset,
-					image->of_length, image->of_dest);
-		if (ret)
-			return ret;
-	}
 
 	return 0;
  }
